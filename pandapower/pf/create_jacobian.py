@@ -215,7 +215,7 @@ def J_modified(Vm, Va, x_control, Ybus_m, branch, tap_control_branches, pvpq, pv
             | J_N_Qc + J_C_Qc |               |  (pq, x_control)  +  (pq, x_control) |
       """
 
-      """   | J_C_Cd | J_C_Cu | J_C_Cc |  = dimensions:  | (x_control, pvpq) | (x_control, pvpq) | (x_control, x_control) |
+      """   | J_C_Cd | J_C_Cu | J_C_Cc |  = dimensions:  | (x_control, pvpq) | (x_control, pq) | (x_control, x_control) |
             
 
       """
@@ -378,10 +378,12 @@ def J_modified(Vm, Va, x_control, Ybus_m, branch, tap_control_branches, pvpq, pv
       
       ### J_C_Cu: partial derivatives of the controoler missmatch equations with respect to the voltage magnitude of the original system
       J_C_Cu = sparse((np.array([1]*len_control),(np.arange(0,len(x_control))[len_control:],controlled_bus)), shape=(len(x_control),len(refpvpq)))   
-      J_C_Cu = J_C_Cu[:, pvpq]       
+      J_C_Cu = J_C_Cu[:, pq]
     
       ### J_C_Cc: partial derivatives of the controller mismatch eqation with respect to controller states variables (x_control) 
-      J_C_Cc = sparse((r_[(-1-t**2),np.array([-1]*len_control)],(np.arange(0,len(x_control)),np.arange(0,len(x_control)))), shape=(len(x_control),len(x_control)))     
+      J_C_Cc = sparse((r_[(-1-t**2),np.array([-1]*len_control)],(np.arange(0,len(x_control)),np.arange(0,len(x_control)))), shape=(len(x_control),len(x_control)))
+
+      J_C_Cc[len_control:, len_control:] = 0
       
 
       

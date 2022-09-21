@@ -12,7 +12,7 @@
 """
 
 from numpy import angle, exp, linalg, conj, r_, Inf, arange, zeros, max, zeros_like, column_stack, float64,\
-    int64, nan_to_num, flatnonzero, tan, deg2rad, append, array, ones
+    int64, nan_to_num, flatnonzero, tan, deg2rad, append, array, ones, rad2deg
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import csr_matrix as sparse, vstack, hstack, eye
 
@@ -194,7 +194,7 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus):
 def _Ybus_modification(Ybus,tap_control_branches,hv_bus,trafo_taps,controlled_bus):
     ##### modify the Ybus to consider the voltage source at regulating Transformer  dfd
     
-
+    
     YS = Ybus.shape[0]  
 
     YM_ROW = vstack([Ybus, sparse((int(len(tap_control_branches)),YS))], format="csr")   ### add zero raws
@@ -205,7 +205,7 @@ def _Ybus_modification(Ybus,tap_control_branches,hv_bus,trafo_taps,controlled_bu
     for i,j in zip(hv_bus,controlled_bus):
 
         YT_d = Ybus[i,i]   ####TODO what if there is multi regulating transformers 
-        YT_nd = YT_d * -1 
+        YT_nd = YT_d * -1  ### TODO change the Yt from the diagonal to the non diagonal element
         
         ##### exchange zeros with the extended Trafo Ybus values
 
@@ -221,7 +221,7 @@ def _Ybus_modification(Ybus,tap_control_branches,hv_bus,trafo_taps,controlled_bu
 
     return Ybus_m
 
-def _evaluate_Fx(Ybus, V, Va, Vm, Sbus, ref, pv, pq, slack_weights=None, dist_slack=False, slack=None, trafo_taps=False, x_control=None, hv_bus=None, controlled_bus=None, vm_set_pu=None, shift_degree=None):
+def _evaluate_Fx(Ybus, V, Va, Vm, Sbus, ref, pv, pq, slack_weights=None, dist_slack=False, slack=None, trafo_taps=False, x_control=None, hv_bus = None , controlled_bus=None, vm_set_pu=None, shift_degree=None):
     # evalute F(x)
     if dist_slack:
         # we include the slack power (slack * contribution factors) in the mismatch calculation
@@ -234,8 +234,10 @@ def _evaluate_Fx(Ybus, V, Va, Vm, Sbus, ref, pv, pq, slack_weights=None, dist_sl
     if trafo_taps:
         # todo: check if the Va indexing needs to have a lookup
         Va_q = x_control[:len(controlled_bus)]
-        #F1 =  tan(Va[hv_bus] - Va[controlled_bus]) - tan(deg2rad(shift_degree))
+        # F1 =  tan(Va[hv_bus] - Va[controlled_bus]) - tan(deg2rad(shift_degree))
         # F1 =  tan(Va[hv_bus] - Va[controlled_bus]) - tan(deg2rad(Va_q))
+        # F1 = tan(Va[hv_bus] - Va_q) - tan(deg2rad(shift_degree))
+
         F1 = tan(Va[controlled_bus] - Va_q) - tan(deg2rad(shift_degree))
         # F1 = tan(Va[controlled_bus] - Va_q) - tan(deg2rad(Va_q))
         F2 = Vm[controlled_bus] - vm_set_pu  # low-volrtage bus of the transformer
