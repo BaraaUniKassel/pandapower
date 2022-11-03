@@ -171,13 +171,13 @@ def test_tcsc_simple3():
     import pandas as pd
     pd.set_option('display.max_columns', None)
 
-    y = calc_y_svc(np.deg2rad(116.09807835), -0.5 , 1,110,1)
-    z_old = 1/y
-    z_eq = np.sqrt(np.square(.0487) + np.square(.13823))
-    z_new = (-z_eq * (z_eq + z_old ))/ z_old
-
-    net.line.x_ohm_per_km[net.line.index == 1] = z_new
-
+    z_base_ohm = 110**2 / 1
+    y = calc_y_svc_pu(np.deg2rad(141), 1 / z_base_ohm, -10 / z_base_ohm)
+    # z_old = 1/y
+    # z_eq = np.sqrt(np.square(.0487) + np.square(.13823))
+    # z_new = (-z_eq * (z_eq + z_old ))/ z_old
+    #
+    net.line.x_ohm_per_km[net.line.index == 1] = z_base_ohm/y
 
     pp.runpp(net, max_iteration=100)
 
