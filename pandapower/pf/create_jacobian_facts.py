@@ -11,7 +11,7 @@ from pandapower.pypower.idx_brch import BR_R, BR_X, F_BUS, T_BUS
 
 def calc_y_svc(x_control, svc_x_l_pu, svc_x_cvar_pu, v_base_kv, baseMVA):
     x_control = np.deg2rad(x_control)
-    z_base_ohm = np.square(v_base_kv) / baseMVA
+    z_base_ohm = np.square(v_base_kv*1000) / (baseMVA*1000000)
     svc_x_l_pu = svc_x_l_pu / z_base_ohm
     svc_x_cvar_pu = svc_x_cvar_pu / z_base_ohm
     y_svc = calc_y_svc_pu(x_control, svc_x_l_pu, svc_x_cvar_pu)
@@ -20,6 +20,7 @@ def calc_y_svc(x_control, svc_x_l_pu, svc_x_cvar_pu, v_base_kv, baseMVA):
 
 
 def calc_y_svc_pu(x_control, svc_x_l_pu, svc_x_cvar_pu):
+   # z_svc = (np.pi * svc_x_l_pu)/ (2 * (np.pi - x_control) + np.sin(2 * x_control) + np.pi * svc_x_l_pu / svc_x_cvar_pu)
     y_svc = (2 * (np.pi - x_control) + np.sin(2 * x_control) + np.pi * svc_x_l_pu / svc_x_cvar_pu) / (np.pi * svc_x_l_pu)
     return y_svc
 

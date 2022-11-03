@@ -157,6 +157,49 @@ def test_tcsc_simple2():
     net.impedance.xtf_pu = -1/y
     pp.runpp(net)
 
+
+def test_tcsc_simple3():
+
+    net = pp.create_empty_network()
+    pp.create_buses(net, 2, 110)
+    pp.create_ext_grid(net, 0)
+    pp.create_line_from_parameters(net, 0, 1, 100, 0.0487, 0.13823, 160, 0.664)
+    #pp.create_impedance(net, 1, 2, 0, 0.001, 1)
+    pp.create_line_from_parameters(net, 0, 1, 1, 0,  -0.082121 , 160, 0.664)
+    pp.create_load(net, 1, 100, 25)
+
+    import pandas as pd
+    pd.set_option('display.max_columns', None)
+
+    y = calc_y_svc(np.deg2rad(116.09807835), -0.5 , 1,110,1)
+    z_old = 1/y
+    z_eq = np.sqrt(np.square(.0487) + np.square(.13823))
+    z_new = (-z_eq * (z_eq + z_old ))/ z_old
+
+    net.line.x_ohm_per_km[net.line.index == 1] = z_new
+
+
+    pp.runpp(net, max_iteration=100)
+
+
+
+
+def test_y():
+    v_base_kv = 110
+    z_base_ohm = np.square(net.bus.loc[b, "vn_kv"]) / net.sn_mva
+    z_base_ohm = np.square(v_base_kv) / baseMVA
+    y = calc_y_svc(116.09807835, 0.5, -1)
+    print(y)
+
+
+
+
+
+
+
+
+
+
 #test_tcsc()
 
 if __name__ == "__main__":
