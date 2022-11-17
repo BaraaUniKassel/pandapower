@@ -270,7 +270,7 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus=None):
                               pq_lookup, tau, tdpf_delay_s, Vm, Va, r_theta_pu, J, r, x, g)
 
         if len(svc_buses) > 0 or len(tcsc_branches) > 0:
-            K_J = vstack([eye(J.shape[0], format="csr"), csr_matrix((len(x_control), J.shape[0]))], format="csr")
+            K_J = vstack([eye(J.shape[0], format="csr"), csr_matrix((len(x_control[pvpq]), J.shape[0]))], format="csr")
             J = K_J * J * K_J.T  # this extends the J matrix with 0-rows and 0-columns
             if len(svc_buses):
                 J_m_svc = create_J_modification_svc(J, svc_buses, pvpq, pq, pq_lookup, V, x_control, x_control_lookup,
@@ -293,7 +293,7 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus=None):
             Va[pq] = Va[pq] + dx[j3:j4]
             Vm[pq] = Vm[pq] + dx[j5:j6]
         if len(x_control) > 0:
-            x_control = x_control + dx[j6:j6a]
+            x_control[pvpq] = x_control[pvpq] + dx[j6:j6a]
         if tdpf:
             T = T + dx[j7:][tdpf_lines]
 
@@ -364,8 +364,9 @@ def _evaluate_Fx(Ybus, V, Sbus, ref, pv, pq, slack_weights=None, dist_slack=Fals
 
         # Pb_c = r_[Sbus_tcsc[pv].real,Sbus_tcsc[pq].real, Sbus_tcsc[pq].imag]
         # F = r_[F+Pb_c]
-        F = r_[F, F_tcsc]
 
+        # F = r_[F, F_tcsc]
+        F = r_[F, F_tcsc[pq]]
         print(p_tcsc)
         print(F)
     else:
