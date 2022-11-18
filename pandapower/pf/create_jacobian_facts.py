@@ -212,6 +212,7 @@ def create_J_modification_tcsc(J, branch, pvpq_lookup, pq_lookup, Ybus_tcsc, V, 
 
         #if len(m) == 0 or len(n) == 0: continue
     # J_C_Q_u = J22.toarray()
+
     # J_C_P_c
     # J_C_P_c = np.zeros(shape=(len(pvpq), len(x_control)))
     # aux_term = 2*(np.cos(2*x_control[x_control_lookup==1] - 1)) / (np.pi * tcsc_x_l_pu * y_tcsc)
@@ -255,7 +256,7 @@ def create_J_modification_tcsc(J, branch, pvpq_lookup, pq_lookup, Ybus_tcsc, V, 
 
 
     # J_C_C_d
-#     J_C_C_d = np.zeros(shape=(len(x_control), len(pvpq)))
+    # J_C_C_d = np.zeros(shape=(len(x_control), len(pvpq)))
 #     for in_pvpq, m, n in ((tcsc_in_pvpq_f, mf_pvpq, nf_pvpq), (tcsc_in_pvpq_t, mt_pvpq, nt_pvpq)):
 #         i = pvpq_lookup[m]
 #         j = pvpq_lookup[n]
@@ -264,10 +265,10 @@ def create_J_modification_tcsc(J, branch, pvpq_lookup, pq_lookup, Ybus_tcsc, V, 
 #
 # #    J_C_C_d[:, tcsc_i] = A * np.sin(np.angle(V[tcsc_j]) + phi_tcsc_ij - np.angle(V[tcsc_i]))
 # #    J_C_C_d[:, tcsc_j] = A * np.sin(np.angle(V[tcsc_i]) - phi_tcsc_ij - np.angle(V[tcsc_j]))
-
+#
 
     J_C_C_d = np.zeros(shape=(len(pvpq), len(pvpq)))
-
+    #
     # for in_pvpq, m, n in ((tcsc_in_pvpq_f, mf_pvpq, nf_pvpq), (tcsc_in_pvpq_t, mt_pvpq, nt_pvpq)):
     #     i = pvpq_lookup[m]
     #     j = pvpq_lookup[n]
@@ -328,29 +329,51 @@ def create_J_modification_tcsc(J, branch, pvpq_lookup, pq_lookup, Ybus_tcsc, V, 
 
 
     # J_C_C_c
+    # J_C_C_c = np.zeros(shape=(len(pvpq), len(pvpq)))
+    # for in_pvpq, m, n in ((tcsc_in_pvpq_f, mf_pvpq, nf_pvpq), (tcsc_in_pvpq_t, mt_pvpq, nt_pvpq)):
+    #     i = pvpq_lookup[m]
+    #     j = pvpq_lookup[n]
+    #     #m = mf_pvpq
+    #     #n = nf_pvpq
+    #     if len(m) ==0 or len(n) == 0:
+    #         continue
+    #
+    #     # todo: angles
+    #     # B = abs(V[m]) * abs(V[n]) * np.cos(np.angle(V[m]) - np.angle(V[n]) + np.angle(Ybus_tcsc[m,n]))
+    #     # B = abs(V[m]) * abs(V[n]) * np.cos(np.angle(V[m]) - np.angle(V[n]) + np.angle(Ybus_tcsc[m,n]))
+    #     # J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] =  2 * B * (np.cos(2 * x_control[x_control_lookup==1])-1) / (np.pi * tcsc_x_l_pu)
+    #
+    #     x = x_control[x_control_lookup==1]
+    #     J_C_C_c[i, i] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
+    #     # J_C_C_c[i, j] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
+    #
+    #     # J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] = (2*abs(V[n]) * abs(V[m]) * (np.cos(2 * x_control[x_control_lookup==1])-1)*np.cos(np.angle(V[n]) - np.angle(V[m]) + np.angle(np.array(Ybus_tcsc[n,m]))))/ (np.pi * tcsc_x_l_pu)
+    #
     J_C_C_c = np.zeros(shape=(len(pvpq), len(pvpq)))
-    for in_pvpq, m, n in ((tcsc_in_pvpq_f, mf_pvpq, nf_pvpq), (tcsc_in_pvpq_t, mt_pvpq, nt_pvpq)):
+
+    for in_pvpq, m, n in zip([tcsc_in_pvpq_f], [mf_pvpq], [nf_pvpq]):
+
         i = pvpq_lookup[m]
         j = pvpq_lookup[n]
-        #m = mf_pvpq
-        #n = nf_pvpq
-        if len(m) ==0 or len(n) == 0:
-            continue
+        x = x_control[x_control_lookup == 1]
 
-        # todo: angles
-        # B = abs(V[m]) * abs(V[n]) * np.cos(np.angle(V[m]) - np.angle(V[n]) + np.angle(Ybus_tcsc[m,n]))
-        # B = abs(V[m]) * abs(V[n]) * np.cos(np.angle(V[m]) - np.angle(V[n]) + np.angle(Ybus_tcsc[m,n]))
-        # J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] =  2 * B * (np.cos(2 * x_control[x_control_lookup==1])-1) / (np.pi * tcsc_x_l_pu)
-
-        x = x_control[x_control_lookup==1]
         J_C_C_c[i, i] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
-        J_C_C_c[i, j] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
+        # J_C_C_c[i, j] = -2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
 
-        # J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] = (2*abs(V[n]) * abs(V[m]) * (np.cos(2 * x_control[x_control_lookup==1])-1)*np.cos(np.angle(V[n]) - np.angle(V[m]) + np.angle(np.array(Ybus_tcsc[n,m]))))/ (np.pi * tcsc_x_l_pu)
+    for in_pvpq, m, n in zip([tcsc_in_pvpq_t], [mt_pvpq], [nt_pvpq]):
+        i = pvpq_lookup[m]
+        j = pvpq_lookup[n]
+        x = x_control[x_control_lookup == 1]
+
+        J_C_C_c[i, i] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
+        # J_C_C_c[i, j] = 2 * np.abs(V[m]) * np.abs(V[n]) * (np.cos(2 * x[m]) - 1) * np.cos(np.angle([V[m]]) - np.angle(V[n]) + np.angle(np.array(Ybus_tcsc[m,n]))) / (np.pi * tcsc_x_l_pu[m])
+
+
     # J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] = (2*abs(V[tcsc_fb]) * abs(V[tcsc_tb]) * (np.cos(2 * x_control[x_control_lookup==1])-1)*np.cos(np.angle(V[tcsc_tb]) - np.angle(V[tcsc_fb]) + np.angle(Ybus_tcsc[tcsc_fb,tcsc_tb])))/ (np.pi * tcsc_x_l_pu)
     #print("JCCc", J_C_C_c)
-    # J_C_C_c = np.array([[2.755,0],[0,2.755]])
+    J_C_C_c = np.array([[2.755,0], [0, 2.755]])
     #J_C_C_c[x_control_lookup == 1, x_control_lookup == 1] = np.array(x_control[x_control_lookup==1])
+
     #J_C_C_c[:, tcsc_i] = - 2 * B * np.cos(2 * x_control[x_control_lookup==1]-1) / (np.pi * tcsc_x_l_pu)
     #J_C_C_c[:, tcsc_j] = - 2 * B * np.cos(2 * x_control[x_control_lookup==1]-1) / (np.pi * tcsc_x_l_pu)
 

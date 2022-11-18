@@ -142,7 +142,7 @@ def test_tcsc_simple2():
     # pp.create_line_from_parameters(net, 1, 2, 100, 0.0487, 0.13823, 160, 0.664)
     pp.create_load(net, 2, 100, 25)
 
-    net.impedance['controllable'] = True
+    net.impedance['controllable'] = False
     net.impedance['set_p_to_mw'] = -20
     net.impedance["thyristor_firing_angle_degree"] = 141.95177933
     net.impedance["tcsc_x_l_ohm"] = 10
@@ -150,12 +150,12 @@ def test_tcsc_simple2():
 
     pp.runpp(net, max_iteration=200)
 
-    net.impedance.controllable = False
-    y = calc_y_svc_pu(np.deg2rad(116.09807835), 1, -10)
-#    net.impedance.rft_pu
-    net.impedance.xft_pu = -1/y
-    net.impedance.xtf_pu = -1/y
-    pp.runpp(net)
+#     net.impedance.controllable = False
+#     y = calc_y_svc_pu(np.deg2rad(116.09807835), 1, -10)
+# #    net.impedance.rft_pu
+#     net.impedance.xft_pu = -1/y
+#     net.impedance.xtf_pu = -1/y
+#     pp.runpp(net)
 
 
 def test_tcsc_simple3():
@@ -182,26 +182,26 @@ def test_tcsc_simple3():
 #     pp.runpp(net)
 #
 
-def test_tcsc_simple3():
+def test_tcsc_simple4():
 
     net = pp.create_empty_network()
     pp.create_buses(net, 2, 110)
     pp.create_ext_grid(net, 0)
-    pp.create_line_from_parameters(net, 0, 1, 100, 0.0487, 0.13823, 160, 0.664)
-    #pp.create_impedance(net, 1, 2, 0, 0.001, 1)
-    pp.create_line_from_parameters(net, 0, 1, 1, 0,  -0.082121 , 160, 0.664)
+    # pp.create_line_from_parameters(net, 0, 1, 100, 0.0487, 0.13823, 160, 0.664)
+    pp.create_impedance(net, 0, 1, 0, 0.001, 1)
+    # pp.create_line_from_parameters(net, 0, 1, 100, 0,  0.001 , 160, 0.664)
     pp.create_load(net, 1, 100, 25)
-
-    import pandas as pd
-    pd.set_option('display.max_columns', None)
-
-    z_base_ohm = 110**2 / 1
-    y = calc_y_svc_pu(np.deg2rad(141), 1 / z_base_ohm, -10 / z_base_ohm)
-    # z_old = 1/y
-    # z_eq = np.sqrt(np.square(.0487) + np.square(.13823))
-    # z_new = (-z_eq * (z_eq + z_old ))/ z_old
     #
-    net.line.x_ohm_per_km[net.line.index == 1] = z_base_ohm/y
+    # import pandas as pd
+    # pd.set_option('display.max_columns', None)
+
+    # z_base_ohm = 110**2 / 1
+    # y = calc_y_svc_pu(np.deg2rad(141), 1 / z_base_ohm, -10 / z_base_ohm)
+    # # z_old = 1/y
+    # # z_eq = np.sqrt(np.square(.0487) + np.square(.13823))
+    # # z_new = (-z_eq * (z_eq + z_old ))/ z_old
+    # #
+    # net.line.x_ohm_per_km[net.line.index == 1] = z_base_ohm/y
 
     pp.runpp(net, max_iteration=100)
 

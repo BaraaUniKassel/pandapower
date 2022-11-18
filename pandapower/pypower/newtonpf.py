@@ -246,7 +246,7 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus=None):
     while (not converged and i < max_it):
         # update iteration counter
         i = i + 1
-
+        print(i)
         if tdpf:
             # update the R, g, b for the tdpf_lines, and the Y-matrices
             branch[tdpf_lines, BR_R] = r = r_ref_pu * (1 + alpha_pu * (T - t_ref_pu))
@@ -283,6 +283,11 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus=None):
                                                       tcsc_in_pvpq_t)
                 J = J + J_m_tcsc
 
+                from scipy.sparse.linalg import inv
+                Jinv = inv(J)
+                print('J', J.toarray())
+                print('Jinv', Jinv.toarray())
+
         dx = -1 * spsolve(J, F, permc_spec=permc_spec, use_umfpack=use_umfpack)
         # update voltage
         if dist_slack:
@@ -292,8 +297,11 @@ def newtonpf(Ybus, Sbus, V0, ref, pv, pq, ppci, options, makeYbus=None):
         if npq and not iwamoto:
             Va[pq] = Va[pq] + dx[j3:j4]
             Vm[pq] = Vm[pq] + dx[j5:j6]
-        if len(x_control) > 0:
-            x_control[pvpq] = x_control[pvpq] + dx[j6:j6a]
+
+        if len(svc_buses) > 0 or len(tcsc_branches) > 0:
+            if len(x_control) > 0:
+                x_control[pvpq] = x_control[pvpq] + dx[j6:j6a]
+
         if tdpf:
             T = T + dx[j7:][tdpf_lines]
 
