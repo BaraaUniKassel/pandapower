@@ -142,7 +142,7 @@ def test_tcsc_simple2():
     # pp.create_line_from_parameters(net, 1, 2, 100, 0.0487, 0.13823, 160, 0.664)
     pp.create_load(net, 2, 100, 25)
 
-    net.impedance['controllable'] = False
+    net.impedance['controllable'] = True
     net.impedance['set_p_to_mw'] = -20
     net.impedance["thyristor_firing_angle_degree"] = 141.95177933
     net.impedance["tcsc_x_l_ohm"] = 10
@@ -172,7 +172,7 @@ def test_tcsc_simple3():
     net.impedance["tcsc_x_l_ohm"] = 1
     net.impedance["tcsc_x_cvar_ohm"] = -10
 
-    pp.runpp(net, max_iteration=10)
+    pp.runpp(net, max_iteration=1000)
 
 #     net.impedance.controllable = False
 #     y = calc_y_svc_pu(np.deg2rad(116.09807835), 1, -10)
