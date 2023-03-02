@@ -195,7 +195,7 @@ def test_tcsc_simple8():
 
 
     # pp.create_switch(net, 1, 2, 'b', closed=False)
-    x = 140
+    x = 170
     y = calc_y_svc_pu(np.deg2rad(x), xl / baseZ, xc / baseZ)
     # pp.create_impedance(net, 1, 2, 0, 1/y, baseMVA)
 
@@ -227,6 +227,273 @@ def test_tcsc_simple8():
     #  test with multiple tcsc in the grid, with mix of "controllable" True / False
     #  test results by comparing impedance result to formula; p, q, i by comparing to line results; vm, va by comparing to bus results
     #  test with some other grids, e.g. the grid from the source
+
+
+def test_tcsc_impedance():
+
+    # (0)-------------(1)-----------------(3)->
+    #                  |--(TCSC)--(2)------|
+
+    baseMVA = 100  # MVA
+    baseV = 110  # kV
+    baseI = baseMVA / (baseV * np.sqrt(3))
+    baseZ = baseV ** 2 / baseMVA
+    xl = 0.2
+    xc = -20
+    p_set_point_mw = -5
+    firing_angel = 170
+    y = calc_y_svc_pu(np.deg2rad(firing_angel), xl / baseZ, xc / baseZ)
+
+    def simple_net():
+
+        net = pp.create_empty_network(sn_mva=baseMVA)
+        pp.create_buses(net, 4, baseV)
+        pp.create_ext_grid(net, 0)
+        pp.create_line_from_parameters(net, 0, 1, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 1, 3, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 2, 3, 20, 0.0487, 0.13823, 160, 0.664)
+
+        pp.create_load(net, 3, 100, 40)
+
+        return net
+
+
+    net1 = simple_net()
+
+    pp.create_tcsc(net1, 1, 2, xl, xc, p_set_point_mw , firing_angel, "Test", controllable=False, min_angle_degree=90, max_angle_degree=180)
+
+    pp.runpp(net1)
+
+
+    Ybus1 = net1._ppc["internal"]["Ybus"].toarray()
+    Ybus_tcsc = makeYbus_tcsc(Ybus1, np.deg2rad(firing_angel), np.array([xl/baseZ]), np.array([xc/baseZ]), np.array([1]), np.array([2]))
+    Y_bus_total = (Ybus1+Ybus_tcsc)
+
+
+    net2 = simple_net()
+
+    pp.create_impedance(net2, 1, 2, 0, (1 / y) , baseMVA)
+
+
+    pp.runpp(net2)
+
+    Ybus2 = net2._ppc["internal"]["Ybus"].toarray()
+
+    assert np.isclose(Y_bus_total, Ybus2, rtol=0, atol=1e-6)
+
+
+def add_tcsc_with_aux_bus(net,tcsc_from_bus_idx):
+
+    ## example
+    ## before applying the function
+    ##### (0)-------------(1)------------------------(2)->
+    ## after applying the function
+    ##### (0)-------------(1)-------(TCSC)--(aux)------------------(2)->
+
+    tcsc_to_aux_bus_idx = len(net.bus.index)
+    pp.create_bus(net, baseV, 'aux',tcsc_to_aux_bus_idx)
+
+    pp.create_tcsc(net, tcsc_from_bus_idx, tcsc_to_aux_bus_idx, xl, xc, p_set_point_mw, firing_angel, "Test", controllable=True,
+                   min_angle_degree=90,
+                   max_angle_degree=180)
+
+    line_index = int(net.line.index[net.line.from_bus == tcsc_from_bus_idx].values)
+    net.line.from_bus[net.line.index == line_index] = tcsc_to_aux_bus_idx
+
+    return net
+
+def add_tcsc_with_aux_bus_and_aux_line(net,from_bus,to_bus,xl,xc,p_set_point_mw,firing_angel,baseV=110, controllable = False):
+
+    ## example
+    ## before applying the function
+    ##### (0)-------------(1)------------------------(2)->
+    ## after applying the function
+    # (0)-------------(1)----------------------------(2)->
+    #                  |--(TCSC)--(3)-----------------|
+
+    tcsc_to_aux_bus_idx = len(net.bus.index)
+    pp.create_bus(net, baseV, tcsc_to_aux_bus_idx)
+
+    pp.create_tcsc(net, from_bus, tcsc_to_aux_bus_idx, xl, xc, p_set_point_mw, firing_angel, name="Test", controllable=controllable,min_angle_degree=90,max_angle_degree=180)
+
+
+    # line_index = int(net.line.index[net.line.from_bus == from_bus].values)
+    #
+    aux_line_from_bus = tcsc_to_aux_bus_idx
+    # aux_line_to_bus = int(net.line.to_bus[net.line.index == line_index].values)
+
+    pp.create_line_from_parameters(net, aux_line_from_bus, to_bus, 20, 0.0487, 0.13823, 160, 0.664,name='aux')
+
+
+    return net
+
+
+def test_tcsc_simple10():
+
+    ##### test with tcsc devices
+    # (0)-------------(1)----------------------------(2)
+    #                  |--(TCSC)--(3)-----------------|
+
+    baseMVA = 100  # MVA
+    baseV = 110  # kV
+    baseI = baseMVA / (baseV * np.sqrt(3))
+    baseZ = baseV ** 2 / baseMVA
+    xl = 0.2
+    xc = -20
+    p_set_point_mw = -5
+    firing_angel = 170
+    y = calc_y_svc_pu(np.deg2rad(firing_angel), xl / baseZ, xc / baseZ)
+
+    def simple_net():
+
+        net = pp.create_empty_network(sn_mva=baseMVA)
+        pp.create_buses(net, 4, baseV)
+        pp.create_ext_grid(net, 0)
+        pp.create_line_from_parameters(net, 0, 1, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 1, 2, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 3, 2, 20, 0.0487, 0.13823, 160, 0.664)
+
+        pp.create_load(net, 2, 100, 40)
+
+        return net
+
+
+    net1 = simple_net()
+
+    pp.create_tcsc(net1,1,3,xl,xc,p_set_point_mw,firing_angel,'test',controllable=False)
+
+    pp.runpp(net1)
+
+    Ybus1 = net1._ppc["internal"]["Ybus"].toarray()
+    Ybus_tcsc = makeYbus_tcsc(Ybus1, np.deg2rad(firing_angel), np.array([xl/baseZ]), np.array([xc/baseZ]), np.array([1]), np.array([3]))
+    Y_bus_total = (Ybus1+Ybus_tcsc)
+
+
+
+    net2 = simple_net()
+
+    pp.create_impedance(net2, 1, 3, 0, (1 / y) , baseMVA)
+
+
+    pp.runpp(net2)
+
+
+    Ybus2 = net2._ppc["internal"]["Ybus"].toarray()
+
+
+
+
+
+    assert np.isclose(Y_bus_total, Ybus2, rtol=0, atol=1e-6)
+    assert np.isclose(net1.res_line.p_from_mw[net1.line.index == 2].values, net1.res_tcsc.p_from_mw.values,rtol=0,atol=1e-6).any()
+
+
+def test_tcsc_simple11():
+
+
+    ##### test with tcsc devices
+
+    #  |-----------------------------------------------------------|
+    # (0)-------------(1)----------------------------(2)----------(3)----------------------------(4)
+    #                  |--(TCSC)--(5)-----------------|            |--(TCSC)--(6)-----------------|
+
+
+    baseMVA = 100  # MVA
+    baseV = 110  # kV
+    baseI = baseMVA / (baseV * np.sqrt(3))
+    baseZ = baseV ** 2 / baseMVA
+    xl = 0.2
+    xc = -20
+    p_set_point_mw = -5
+    firing_angel = 170
+    y = calc_y_svc_pu(np.deg2rad(firing_angel), xl / baseZ, xc / baseZ)
+
+    def net_simple1():
+        net = pp.create_empty_network(sn_mva=baseMVA)
+
+        pp.create_buses(net, 7, baseV)
+        pp.create_ext_grid(net, 0)
+
+        pp.create_line_from_parameters(net, 0, 1, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 1, 2, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 2, 3, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 3, 4, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 0, 3, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 5, 2, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 6, 4, 20, 0.0487, 0.13823, 160, 0.664)
+
+        pp.create_load(net, 2, 100, 40)
+        pp.create_load(net, 4, 100, 40)
+
+        return net
+
+    net1 = net_simple1()
+
+    pp.create_tcsc(net1,1,5,xl,xc,p_set_point_mw,firing_angel,'test',controllable=True)
+    pp.create_tcsc(net1,3,6,xl,xc,p_set_point_mw,firing_angel,'test',controllable=True)
+
+
+
+    pp.runpp(net1, max_iteration=100)
+
+
+    # plot_z(baseZ, xl, xc)
+
+    ############# impedance check #########to be deleted
+
+    Ybus1 = net1._ppc["internal"]["Ybus"].toarray()
+    Ybus_tcsc = makeYbus_tcsc(Ybus1, np.deg2rad(firing_angel), np.array([xl/baseZ]), np.array([xc/baseZ]), np.array([1]), np.array([2]))
+    Y_bus_total = (Ybus1+Ybus_tcsc)
+
+
+    net2 = net_simple1()
+
+    pp.create_impedance(net2, 1, 5, 0, (1 / y) , baseMVA)
+    pp.create_impedance(net2, 3, 6, 0, (1 / y) , baseMVA)
+
+
+    pp.runpp(net2,max_iteration=100)
+
+
+    Ybus2 = net2._ppc["internal"]["Ybus"].toarray()
+
+
+
+
+    assert np.isclose(Y_bus_total, Ybus2, rtol=0, atol=1e-6).all()
+
+
+
+
+
+
+def test_tcsc_simple12():
+
+
+##### test with some controlable and some not controlable tcsc devices
+##### it is not working
+
+    pass
+
+
+def test_tcsc_simple13():
+
+
+##### test with multi pv and pq buses with tcsc
+    pass
+
+
+def test_tcsc_simple14():
+
+
+##### test with multi pv and pq buses with multi tcsc
+
+    pass
+
+
+
+
+
 
 
 def plot_z(baseZ, xl, xc):

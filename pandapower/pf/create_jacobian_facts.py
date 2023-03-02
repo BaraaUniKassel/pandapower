@@ -73,11 +73,11 @@ def create_J_modification_tcsc(V, Ybus_tcsc, x_control, tcsc_controllable, tcsc_
     # S_tcsc_pu = V * (Ybus_tcsc.conj() @ V.conj())
     dY_TCSC_dx = 2 * (np.cos(2 * x_control) - 1) / (np.pi * tcsc_x_l_pu)
 
-    S_Fii = V[f] * Ybus_tcsc[f, f].conj() * V[f].conj()
-    S_Fkk = V[t] * Ybus_tcsc[t, t].conj() * V[t].conj()
+    S_Fii = V[f] * np.array(np.conj(Ybus_tcsc[f, f] @ V[f]))
+    S_Fkk = V[t] * np.array(np.conj(Ybus_tcsc[t, t] @ V[t]))
 
-    S_Fik = V[f] * Ybus_tcsc[f, t].conj() * V[t].conj()
-    S_Fki = V[t] * Ybus_tcsc[t, f].conj() * V[f].conj()
+    S_Fik = V[f] * np.array(np.conj(Ybus_tcsc[f, t] @ V[t]))
+    S_Fki = V[t] * np.array(np.conj(Ybus_tcsc[t, f] @ V[f]))
 
     # seems like it is not used:
     # S_ii = np.abs(V[f]) ** 2 * np.abs(Ybus[f, f]) * np.exp(1j * np.angle(Ybus[f, f].conj()))  ####
