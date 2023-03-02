@@ -396,7 +396,7 @@ def test_tcsc_simple11():
     #  |-----------------------------------------------------------|
     # (0)-------------(1)----------------------------(2)----------(3)----------------------------(4)
     #                  |--(TCSC)--(5)-----------------|            |--(TCSC)--(6)-----------------|
-
+    #  |------------------------------------------------------------------------------------------|
 
     baseMVA = 100  # MVA
     baseV = 110  # kV
@@ -417,10 +417,12 @@ def test_tcsc_simple11():
         pp.create_line_from_parameters(net, 0, 1, 20, 0.0487, 0.13823, 160, 0.664)
         pp.create_line_from_parameters(net, 1, 2, 20, 0.0487, 0.13823, 160, 0.664)
         pp.create_line_from_parameters(net, 2, 3, 20, 0.0487, 0.13823, 160, 0.664)
+
         pp.create_line_from_parameters(net, 3, 4, 20, 0.0487, 0.13823, 160, 0.664)
         pp.create_line_from_parameters(net, 0, 3, 20, 0.0487, 0.13823, 160, 0.664)
         pp.create_line_from_parameters(net, 5, 2, 20, 0.0487, 0.13823, 160, 0.664)
         pp.create_line_from_parameters(net, 6, 4, 20, 0.0487, 0.13823, 160, 0.664)
+        pp.create_line_from_parameters(net, 0, 4, 20, 0.0487, 0.13823, 160, 0.664)
 
         pp.create_load(net, 2, 100, 40)
         pp.create_load(net, 4, 100, 40)
@@ -429,8 +431,8 @@ def test_tcsc_simple11():
 
     net1 = net_simple1()
 
-    pp.create_tcsc(net1,1,5,xl,xc,p_set_point_mw,firing_angel,'test',controllable=True)
-    pp.create_tcsc(net1,3,6,xl,xc,p_set_point_mw,firing_angel,'test',controllable=True)
+    pp.create_tcsc(net1,1,5,xl,xc,p_set_point_mw,firing_angel,'test',controllable=False)
+    pp.create_tcsc(net1,3,6,xl,xc,p_set_point_mw,firing_angel,'test',controllable=False)
 
 
 

@@ -158,7 +158,7 @@ def create_J_modification_tcsc(V, Ybus_tcsc, x_control, tcsc_controllable, tcsc_
     elif np.any(tcsc_controllable):
         J_m = np.vstack([np.hstack([J_C_P_d, J_C_P_u, J_C_P_c[:, tcsc_controllable]]),
                          np.hstack([J_C_Q_d, J_C_Q_u, J_C_Q_c[:, tcsc_controllable]]),
-                         np.hstack([J_C_C_d[tcsc_controllable, :], J_C_C_u[tcsc_controllable, :], J_C_C_c[tcsc_controllable, tcsc_controllable]])])
+                         np.hstack([J_C_C_d[tcsc_controllable, :], J_C_C_u[tcsc_controllable, :], J_C_C_c[:,tcsc_controllable][tcsc_controllable,:]])])
     else:
         J_m = np.vstack([np.hstack([J_C_P_d, J_C_P_u]),
                          np.hstack([J_C_Q_d, J_C_Q_u])])
