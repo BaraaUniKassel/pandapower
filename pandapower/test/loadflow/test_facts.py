@@ -564,10 +564,6 @@ def test_tcsc_simple14():
 
 
 
-
-
-
-
 def test_compare_to_impedance():
     baseMVA = 100  # MVA
     baseV = 110  # kV
@@ -649,7 +645,7 @@ def test_tcsc_case_study():
     Ybus = net._ppc["internal"]["Ybus"]
     Ybus_tcsc = makeYbus_tcsc(Ybus, np.deg2rad(net.res_tcsc.thyristor_firing_angle.values),
                               xl / baseZ, xc / baseZ, [f], [aux])
-    assert np.allclose((Ybus + Ybus_tcsc).toarray(), net_ref._ppc["internal"]["Ybus"].toarray(), rtol=0, atol=1e-6)
+    assert np.allclose(np.array((Ybus + Ybus_tcsc)), net_ref._ppc["internal"]["Ybus"].toarray(), rtol=0, atol=1e-6)
 
 
 def test_svc_tcsc_case_study():
